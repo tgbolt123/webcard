@@ -43,17 +43,24 @@ def check_card(card):
 
 @bot.message_handler(commands=['start'])
 def start_cmd(message):
-    bot.reply_to(message, "👋 Hoş geldin!\n\nKomutlar:\n/check - Tek kart kontrol et\n/topluchk - .txt ile kart kontrol et\n/parser - Kartları biçimlendir ve kontrol et")
+    bot.reply_to(message, "👋 Hoş geldin!\n\nKomutlar:\n/check - Tek veya birden fazla kart gir\n/topluchk - .txt ile kart kontrol et\n/parser - Kartları biçimlendir ve kontrol et")
 
 @bot.message_handler(commands=['check'])
 def tek_check(message):
-    msg = bot.send_message(message.chat.id, "Kontrol edilecek kartı gir (no|ay|yıl|cvv)")
+    msg = bot.send_message(message.chat.id, "Kontrol edilecek kart(lar)ı gir (no|ay|yıl|cvv) - her satıra bir tane")
     bot.register_next_step_handler(msg, tek_check_cevap)
 
 def tek_check_cevap(msg):
-    card = msg.text.strip()
-    sonuc = check_card(card)
-    bot.reply_to(msg, sonuc)
+    lines = msg.text.strip().splitlines()
+    yanitlar = [check_card(line.strip()) for line in lines if line.strip()]
+    cevap = "\n".join(yanitlar)
+    if len(cevap) < 4000:
+        bot.send_message(msg.chat.id, cevap)
+    else:
+        with open("check_sonuclar.txt", "w", encoding="utf-8") as f:
+            f.write(cevap)
+        with open("check_sonuclar.txt", "rb") as f:
+            bot.send_document(msg.chat.id, f)
 
 @bot.message_handler(commands=['topluchk'])
 def toplu_check(message):
@@ -91,9 +98,9 @@ def parser_cevap(msg):
         return bot.send_message(msg.chat.id, f"Napiyon ({len(lines)}) ne nasıl yapayım!")
     parsed = []
     for line in lines:
-        parts = re.findall(r'\d{12,19}|\d{2}', line)
-        if len(parts) >= 4:
-            parsed.append(f"{parts[0]}|{parts[1]}|20{parts[2]}|{parts[3]}")
+        nums = re.findall(r'\d+', line)
+        if len(nums) >= 4 and 12 <= len(nums[0]) <= 19:
+            parsed.append(f"{nums[0]}|{nums[1]}|{nums[2]}|{nums[3]}")
     if not parsed:
         return bot.send_message(msg.chat.id, "⚠️ Biçimlendirilebilecek kart bulunamadı.")
     yanitlar = [check_card(p) for p in parsed]
