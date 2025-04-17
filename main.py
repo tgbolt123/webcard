@@ -42,7 +42,7 @@ def check_card(card):
 
 @bot.message_handler(commands=['start'])
 def start_cmd(message):
-    bot.reply_to(message, "👋 Hoş Geldiniz \n\nKomutlar:\n/check - Tek veya birden fazla kart gir\n/topluchk - .txt ile kart kontrol et\n/parser - Kartları biçimlendir ve kontrol et CREDIT - HERSEUX")
+    bot.reply_to(message, "👋 Hoş Geldiniz ---CREDIT HERSEUX\n\nKomutlar:\n/check - Tek veya birden fazla kart gir\n/topluchk - .txt ile kart kontrol et\n/parser - Kartları parseler ve kontrol eder")
 
 @bot.message_handler(commands=['check'])
 def tek_check(message):
